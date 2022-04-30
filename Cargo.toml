@@ -1,0 +1,14 @@
+[package]
+name = "fast-decimal"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.56"
+authors = ["David Li <davidli2010@foxmail.com>"]
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+description = "Fast high precision decimal"
+keywords = ["decimal", "fast", "precision", "number"]
+categories = ["Mathematics", "Data structures"]
+repository = "https://github.com/davidli2010/fast-decimal.git"
+homepage = "https://github.com/davidli2010/fast-decimal"
+documentation = "https://docs.rs/fast-decimal/"
