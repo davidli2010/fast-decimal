@@ -9,7 +9,6 @@ pub const DEC_DIGITS: i32 = 9;
 
 pub const DEC_POS: u8 = 0x00;
 pub const DEC_NEG: u8 = 0x80;
-pub const DEC_NAN: u8 = 0x40;
 
 #[derive(Debug)]
 pub struct Decimal {
@@ -22,7 +21,6 @@ pub struct Decimal {
 
 impl Decimal {
     pub const ZERO: Decimal = unsafe { Decimal::from_raw_parts(DEC_POS, 0, 0, 0, [0; 5]) };
-    pub const NAN: Decimal = unsafe { Decimal::from_raw_parts(DEC_NAN, 0, 0, 0, [0; 5]) };
 
     #[inline]
     pub(crate) const unsafe fn from_raw_parts(sign: u8, weight: i8, dscale: i8, ndigits: u8, digits: [u32; 5]) -> Self {
@@ -34,12 +32,6 @@ impl Decimal {
             ndigits,
             digits,
         }
-    }
-
-    /// Checks if `self` is `NaN`.
-    #[inline]
-    pub const fn is_nan(&self) -> bool {
-        self.sign == DEC_NAN
     }
 
     /// Checks if `self` is positive.
@@ -57,7 +49,7 @@ impl Decimal {
     /// Checks if `self` is zero.
     #[inline]
     pub const fn is_zero(&self) -> bool {
-        self.ndigits == 0 && self.is_sign_positive()
+        self.ndigits == 0
     }
 
     #[inline]
@@ -68,10 +60,6 @@ impl Decimal {
     /// Convert `self` to text representation.
     /// `self` is displayed to the number of digits indicated by its dscale.
     fn write<W: fmt::Write>(&self, f: &mut W) -> Result<(), fmt::Error> {
-        if self.is_nan() {
-            return f.write_str("NaN");
-        }
-
         if self.is_zero() {
             return f.write_str("0");
         }

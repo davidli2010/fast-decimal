@@ -258,11 +258,7 @@ fn from_str(s: &str) -> Result<Decimal, DecimalParseError> {
     let (is_nan, s) = extract_nan(s);
 
     if is_nan {
-        if s.iter().any(|n| !n.is_ascii_whitespace()) {
-            return Err(DecimalParseError::Invalid);
-        }
-
-        Ok(Decimal::NAN)
+        Err(DecimalParseError::Invalid)
     } else {
         let (n, s) = parse_str(s)?;
 
@@ -315,6 +311,7 @@ mod tests {
         assert_parse_invalid("   -   ");
         assert_parse_invalid("-.");
         assert_parse_invalid("- 1");
+        assert_parse_invalid("NaN");
         assert_parse_invalid("-NaN");
         assert_parse_invalid("NaN.");
         assert_parse_invalid("NaN1");
@@ -342,17 +339,6 @@ mod tests {
 
     #[test]
     fn parse_valid() {
-        // NaN
-        assert_parse("NaN", "NaN");
-        assert_parse("Nan", "NaN");
-        assert_parse("NAN", "NaN");
-        assert_parse("NAn", "NaN");
-        assert_parse("naN", "NaN");
-        assert_parse("nan", "NaN");
-        assert_parse("nAN", "NaN");
-        assert_parse("nAn", "NaN");
-        assert_parse("   NaN   ", "NaN");
-
         // Integer
         assert_parse("0", "0");
         assert_parse("-0", "0");
