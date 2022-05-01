@@ -11,6 +11,14 @@ fn decimal_cmp(bench: &mut Bencher) {
     })
 }
 
-benchmark_group!(decimal_benches, decimal_cmp,);
+fn decimal_cmp2(bench: &mut Bencher) {
+    let x: Decimal = "12345678901.234567".parse().unwrap();
+    let y: Decimal = "12345.678901".parse().unwrap();
+    bench.iter(|| {
+        let _n = black_box(x > y);
+    })
+}
+
+benchmark_group!(decimal_benches, decimal_cmp, decimal_cmp2);
 
 benchmark_main!(decimal_benches);
