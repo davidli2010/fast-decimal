@@ -1,5 +1,6 @@
 //! Decimal implementation.
 
+use std::cmp::Ordering;
 use std::fmt;
 
 pub const MAX_PRECISION: u32 = 36;
@@ -117,6 +118,103 @@ impl Decimal {
         }
 
         Ok(())
+    }
+
+    /// Compare the absolute values of `self` and `other`.
+    fn cmp_abs(&self, other: &Self) -> Ordering {
+        let dec1_ndigits = self.ndigits;
+        let dec1_digits = self.digits();
+        let mut dec1_weight = self.weight;
+
+        let dec2_ndigits = other.ndigits;
+        let dec2_digits = other.digits();
+        let mut dec2_weight = other.weight;
+
+        let (mut i1, mut i2) = (0, 0);
+
+        // Check any digits before the first common digit
+
+        while dec1_weight > dec2_weight && i1 < dec1_ndigits {
+            if dec1_digits[i1 as usize] != 0 {
+                return Ordering::Greater;
+            }
+
+            i1 += 1;
+            dec1_weight -= 1;
+        }
+        while dec2_weight > dec1_weight && i2 < dec2_ndigits {
+            if dec2_digits[i2 as usize] != 0 {
+                return Ordering::Less;
+            }
+
+            i2 += 1;
+            dec2_weight -= 1;
+        }
+
+        // At this point, either var1_weight == var2_weight or we've run out of digits
+
+        if dec1_weight == dec2_weight {
+            while i1 < dec1_ndigits && i2 < dec2_ndigits {
+                let stat = dec1_digits[i1 as usize] as i64 - dec2_digits[i2 as usize] as i64;
+                if stat != 0 {
+                    return if stat > 0 { Ordering::Greater } else { Ordering::Less };
+                } else {
+                    i1 += 1;
+                    i2 += 1;
+                }
+            }
+        }
+
+        // At this point, we've run out of digits on one side or the other; so any
+        // remaining nonzero digits imply that side is larger
+
+        while i1 < dec1_ndigits {
+            if dec1_digits[i1 as usize] != 0 {
+                return Ordering::Greater;
+            }
+
+            i1 += 1;
+        }
+        while i2 < dec2_ndigits {
+            if dec2_digits[i2 as usize] != 0 {
+                return Ordering::Less;
+            }
+
+            i2 += 1;
+        }
+
+        Ordering::Equal
+    }
+
+    /// Compare two values on variable level.
+    /// We assume zeroes have been truncated to no digits.
+    #[inline]
+    pub(crate) fn cmp_common(&self, other: &Self) -> Ordering {
+        if self.is_zero() {
+            if other.is_zero() {
+                Ordering::Equal
+            } else if other.is_sign_negative() {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }
+        } else if other.is_zero() {
+            if self.is_sign_positive() {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }
+        } else if self.is_sign_positive() {
+            if other.is_sign_negative() {
+                Ordering::Greater
+            } else {
+                self.cmp_abs(other)
+            }
+        } else if other.is_sign_positive() {
+            Ordering::Less
+        } else {
+            other.cmp_abs(self)
+        }
     }
 }
 
